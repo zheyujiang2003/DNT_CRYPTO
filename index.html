@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNT 加密貨幣即時匯率</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 1em;
+            text-align: center;
+        }
+        main {
+            flex: 1;
+            padding: 1em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+        table, th, td {
+            border: 1px solid #dee2e6;
+        }
+        th, td {
+            padding: 0.75em;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 1em;
+            margin-top: auto; /* 將頁腳推到頁面的底部 */
+        }
+        .search-container {
+            margin-top: 1em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .search-title {
+            font-weight: bold;
+            margin-bottom: 0.5em;
+        }
+        .search {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .search input {
+            padding: 0.5em;
+            margin-right: 0.5em;
+            width: 100%;
+            max-width: 300px;
+            box-sizing: border-box;
+        }
+        .search button {
+            padding: 0.5em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 100px;
+            box-sizing: border-box;
+            margin-top: 0.5em;
+        }
+        .home-button {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background-color: #007bff; /* 藍色背景 */
+            color: white; /* 白色文字 */
+            padding: 15px 20px; /* 按鈕內部填充 */
+            border: none; /* 無邊框 */
+            border-radius: 5px; /* 邊框圓角 */
+            cursor: pointer; /* 滑鼠指標變為手型 */
+            font-size: 16px; /* 字體大小 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 按鈕陰影 */
+            display: none; /* 初始隱藏 */
+        }
+
+        .home-button:hover {
+            background-color: #0056b3; /* 當滑鼠懸停時的背景色 */
+        }
+        @media (min-width: 600px) {
+            .search-container {
+                align-items: flex-start;
+            }
+            .search-title {
+                margin-bottom: 0.5em;
+                text-align: left;
+            }
+            .search {
+                align-items: flex-start;
+            }
+            .search input, .search button {
+                margin-top: 0.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>DNT 加密貨幣即時匯率</h1>
+    </header>
+    <main>
+        <div class="search-container">
+            <h2 class="search-title">即時加密貨幣價格（基準：台幣）</h2>
+            <div class="search">
+                <input type="text" id="cryptoInput" placeholder="輸入加密貨幣代碼或名稱 (如：BTC 或 比特幣)">
+                <button onclick="searchCryptoRate()">查詢</button>
+            </div>
+        </div>
+        <table id="cryptoTable">
+            <thead>
+                <tr>
+                    <th>加密貨幣</th>
+                    <th>價格 (TWD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 加密貨幣價格資料將在這裡顯示 -->
+            </tbody>
+        </table>
+    </main>
+    <footer>
+        <p>DNT 誠信 合法合規</p>
+    </footer>
+    <button class="home-button" id="homeButton" onclick="goToHome()">回到首頁</button>
+    <script>
+        const cryptoMap = {
+            'bitcoin': '比特幣',
+            'ethereum': '以太坊',
+            'ripple': '瑞波幣',
+            'litecoin': '萊特幣',
+            'bitcoin-cash': '比特幣現金',
+            'eos': '柚子幣',
+            'cardano': '艾達幣',
+            'stellar': '恆星幣',
+            'tron': '波場幣',
+            'dogecoin': '狗狗幣',
+        };
+
+        const commonCryptos = ['bitcoin', 'ethereum', 'ripple', 'litecoin', 'bitcoin-cash', 'eos', 'cardano', 'stellar', 'tron', 'dogecoin'];
+
+        async function fetchCryptoRates() {
+            try {
+                const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple,litecoin,bitcoin-cash,eos,cardano,stellar,tron,dogecoin&vs_currencies=twd';
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                const tableBody = document.querySelector('#cryptoTable tbody');
+                tableBody.innerHTML = ''; // 清空表格
+
+                for (const cryptoCode of commonCryptos) {
+                    const cryptoName = cryptoMap[cryptoCode] || cryptoCode;
+                    const price = data[cryptoCode].twd;
+                    const row = document.createElement('tr');
+                    const cryptoCell = document.createElement('td');
+                    cryptoCell.textContent = `${cryptoName} (${cryptoCode.toUpperCase()})`;
+                    const priceCell = document.createElement('td');
+                    priceCell.textContent = price;
+                    row.appendChild(cryptoCell);
+                    row.appendChild(priceCell);
+                    tableBody.appendChild(row);
+                }
+
+                // 查詢後顯示按鈕
+                document.getElementById('homeButton').style.display = 'block';
+            } catch (error) {
+                console.error('無法獲取加密貨幣價格:', error);
+                alert('無法獲取加密貨幣價格，請稍後再試。');
+            }
+        }
+
+        async function searchCryptoRate() {
+            const input = document.getElementById('cryptoInput').value.trim().toLowerCase();
+            const cryptoCode = Object.keys(cryptoMap).find(key => cryptoMap[key] === input) || input;
+            if (cryptoCode) {
+                try {
+                    const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${cryptoCode}&vs_currencies=twd`;
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    const data = await response.json();
+
+                    const tableBody = document.querySelector('#cryptoTable tbody');
+                    tableBody.innerHTML = ''; // 清空表格
+
+                    if (cryptoCode in data) {
+                        const cryptoName = cryptoMap[cryptoCode] || cryptoCode;
+                        const price = data[cryptoCode].twd;
+                        const row = document.createElement('tr');
+                        const cryptoCell = document.createElement('td');
+                        cryptoCell.textContent = `${cryptoName} (${cryptoCode.toUpperCase()})`;
+                        const priceCell = document.createElement('td');
+                        priceCell.textContent = price;
+                        row.appendChild(cryptoCell);
+                        row.appendChild(priceCell);
+                        tableBody.appendChild(row);
+                    } else {
+                        alert('無法獲取該加密貨幣的價格');
+                    }
+
+                    // 查詢後顯示按鈕
+                    document.getElementById('homeButton').style.display = 'block';
+                } catch (error) {
+                    console.error('無法獲取加密貨幣價格:', error);
+                    alert('無法獲取加密貨幣價格，請稍後再試。');
+                }
+            } else {
+                alert('請輸入有效的加密貨幣代碼或名稱');
+            }
+        }
+
+        function goToHome() {
+            document.getElementById('cryptoInput').value = '';
+            fetchCryptoRates();
+            document.getElementById('homeButton').style.display = 'none'; // 隱藏按鈕
+        }
+
+        fetchCryptoRates(); // 初次加載時獲取資料
+        setInterval(fetchCryptoRates, 30000); // 每30秒更新一次
+    </script>
+</body>
+</html>
